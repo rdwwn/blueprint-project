@@ -1,0 +1,33 @@
+# The Blueprint Project
+
+> Free internships, scholarships, and competitions for high school students. Verified by hand, tracked by deadline, built for anyone applying.
+
+## What is this?
+
+The Blueprint Project is a curated database of 500+ verified opportunities for high school students. Every listing is researched and checked by a person — no dead links, no spam, no pay-to-apply traps.
+
+## Key features
+
+- **500+ hand-checked listings** across 18 fields
+- **Filter by field, cost, format, deadline, season, and audience**
+- **Deadline radar** — see which applications are closing soon
+- **Free forever** — no paywall, no premium tier
+- **Verified quarterly** — links checked by hand
+
+## Pages
+
+- **Home** (`/`): Overview, featured programs, and the Blueprint Promise
+- **Search** (`/search`): Full database with advanced filters
+- **Mission** (`/mission`): Why Blueprint exists and how it works
+- **Opportunity** (`/opportunity/[slug]`): Detailed program page with apply link
+
+## Data
+
+All opportunity data is sourced from official program websites. Fields include:
+- Name, organization, category, field
+- Location, cost, deadline, duration
+- Eligibility, description, tags, season
+
+## Contact
+
+Built by students, for students. Visit theblueprintproject.vercel.app for more information.
