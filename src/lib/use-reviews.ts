@@ -1,8 +1,12 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { getAnonId, anonHeaders } from "@/lib/anon-id";
+import { slugify } from "@/lib/slug";
 
-const KEY = "bp_program_reviews";
+// Server-backed reviews. Reviews are moderated: students submit, the founder
+// approves on /admin, and only approved reviews are public. The author can
+// still see their own pending/rejected rows on the program page.
 
 export type Review = {
   id: string;
@@ -12,45 +16,68 @@ export type Review = {
   rating: number;
   text: string;
   date: string;
+  status: "approved" | "pending" | "rejected";
 };
 
-const subscribers = new Set<() => void>();
-let snapshot: Record<string, Review[]> = {};
-let initialized = false;
+type ApiReview = {
+  id: string;
+  opportunitySlug: string;
+  opportunityName: string;
+  author: string;
+  grade: string | null;
+  rating: number;
+  text: string;
+  status: "approved" | "pending" | "rejected";
+  createdAt: string;
+};
 
-function ensureInit() {
-  if (initialized || typeof window === "undefined") return;
-  initialized = true;
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (typeof parsed === "object" && parsed !== null) {
-        snapshot = parsed as Record<string, Review[]>;
-        subscribers.forEach((cb) => cb());
-        return;
-      }
-    }
-  } catch {
-    // ignore
-  }
-  seedReviews();
+function toReview(r: ApiReview): Review {
+  return {
+    id: r.id,
+    programName: r.opportunityName,
+    author: r.author,
+    grade: r.grade ?? "",
+    rating: r.rating,
+    text: r.text,
+    date: (r.createdAt || "").slice(0, 10),
+    status: r.status,
+  };
 }
 
-function read(): Record<string, Review[]> {
-  ensureInit();
+// Module-level cache of approved reviews, keyed by program name — same shape
+// the UI has always consumed (reviews page, most-popular, home stats).
+let snapshot: Record<string, Review[]> = {};
+let loadStarted = false;
+
+function ensureLoaded() {
+  if (loadStarted || typeof window === "undefined") return;
+  loadStarted = true;
+  fetch("/api/reviews")
+    .then((res) => (res.ok ? res.json() : Promise.reject()))
+    .then((data: { reviews?: ApiReview[] }) => {
+      const next: Record<string, Review[]> = {};
+      for (const raw of data.reviews ?? []) {
+        const r = toReview(raw);
+        if (r.status !== "approved") continue;
+        (next[r.programName] ??= []).push(r);
+      }
+      snapshot = next;
+      subscribers.forEach((cb) => cb());
+    })
+    .catch(() => {});
+}
+
+const subscribers = new Set<() => void>();
+
+function read() {
+  ensureLoaded();
   return snapshot;
 }
 
-function write(data: Record<string, Review[]>) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(KEY, JSON.stringify(data));
-    snapshot = data;
-    subscribers.forEach((cb) => cb());
-  } catch {
-    // ignore
-  }
+const SERVER_SNAPSHOT: Record<string, Review[]> = {};
+
+function getServerSnapshot(): Record<string, Review[]> {
+  return SERVER_SNAPSHOT;
 }
 
 function subscribe(cb: () => void) {
@@ -60,75 +87,73 @@ function subscribe(cb: () => void) {
   };
 }
 
-const SERVER_SNAPSHOT: Record<string, Review[]> = {};
-
-function getServerSnapshot(): Record<string, Review[]> {
-  return SERVER_SNAPSHOT;
-}
-
-// Seed with a few sample reviews so the page isn't empty on first visit
-function seedReviews(): Record<string, Review[]> {
-  const sample: Record<string, Review[]> = {
-    "Google Computer Science Summer Institute (CSSI)": [
-      {
-        id: "seed-1",
-        programName: "Google Computer Science Summer Institute (CSSI)",
-        author: "Maya R.",
-        grade: "Junior",
-        rating: 5,
-        text: "Life-changing. The project I built there became my college essay. Met my best friends and got mentorship from real Google engineers. Hard work but worth every minute.",
-        date: "2025-08-15",
-      },
-    ],
-    "NASA OSTEM High School Internship": [
-      {
-        id: "seed-2",
-        programName: "NASA OSTEM High School Internship",
-        author: "James T.",
-        grade: "Senior",
-        rating: 5,
-        text: "Worked on a real research project with NASA scientists. Got to present at a symposium. The application is competitive but they read every essay.",
-        date: "2025-07-22",
-      },
-    ],
-    "Research Science Institute (RSI)": [
-      {
-        id: "seed-3",
-        programName: "Research Science Institute (RSI)",
-        author: "Aisha K.",
-        grade: "Senior",
-        rating: 5,
-        text: "Brutal and incredible. Five weeks of real research, then you write a paper and present it. The community of other nerdy students was the best part.",
-        date: "2025-08-01",
-      },
-    ],
-  };
-  write(sample);
-  return sample;
-}
-
 export function useReviews() {
   const reviews = useSyncExternalStore(subscribe, read, getServerSnapshot);
 
-  const addReview = (programName: string, review: Omit<Review, "id" | "date" | "programName">) => {
-    const all = read();
-    const newReview: Review = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      programName,
-      date: new Date().toISOString().split("T")[0],
-      ...review,
-    };
-    const existing = all[programName] ?? [];
-    write({ ...all, [programName]: [newReview, ...existing] });
-  };
+  useEffect(() => {
+    ensureLoaded();
+  }, []);
 
-  const getReviews = (programName: string) => reviews[programName] ?? [];
-  const getAverage = (programName: string) => {
+  const getReviews = useCallback((programName: string) => reviews[programName] ?? [], [reviews]);
+  const getAverage = useCallback((programName: string) => {
     const r = reviews[programName];
     if (!r || r.length === 0) return 0;
     return r.reduce((sum, x) => sum + x.rating, 0) / r.length;
-  };
-  const getCount = (programName: string) => reviews[programName]?.length ?? 0;
+  }, [reviews]);
+  const getCount = useCallback((programName: string) => reviews[programName]?.length ?? 0, [reviews]);
 
-  return { reviews, addReview, getReviews, getAverage, getCount };
+  return { reviews, getReviews, getAverage, getCount };
+}
+
+export type SubmitResult = { ok: boolean; error?: string };
+
+/** Submit a review. Goes to the moderation queue (pending) until approved. */
+export async function submitReview(
+  programName: string,
+  review: { author: string; grade: string; rating: number; text: string },
+  slug?: string,
+): Promise<SubmitResult> {
+  const id = getAnonId();
+  if (!id) return { ok: false, error: "Reviews need browser storage, which is unavailable here." };
+  try {
+    const res = await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "content-type": "application/json", ...anonHeaders() },
+      body: JSON.stringify({
+        opportunitySlug: slug || slugify(programName),
+        opportunityName: programName,
+        ...review,
+      }),
+    });
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) return { ok: false, error: data.error ?? "Could not submit review" };
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Network error. Please try again." };
+  }
+}
+
+/**
+ * Per-program reviews including the visitor's own pending/rejected rows so they
+ * can see their submission is in the queue. Used by the program detail page.
+ */
+export async function fetchProgramReviews(
+  programName: string,
+  slug: string,
+): Promise<{ reviews: Review[]; average: number; count: number; ownPending: boolean }> {
+  try {
+    const params = new URLSearchParams({ program: slug || slugify(programName) });
+    const res = await fetch(`/api/reviews?${params.toString()}`, { headers: anonHeaders() });
+    if (!res.ok) throw new Error("load failed");
+    const data = (await res.json()) as { reviews?: ApiReview[]; average?: number; count?: number };
+    const reviews = (data.reviews ?? []).map(toReview);
+    return {
+      reviews,
+      average: data.average ?? 0,
+      count: data.count ?? 0,
+      ownPending: reviews.some((r) => r.status === "pending"),
+    };
+  } catch {
+    return { reviews: [], average: 0, count: 0, ownPending: false };
+  }
 }

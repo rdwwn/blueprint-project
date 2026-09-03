@@ -11,11 +11,11 @@ export default function PrivacyPage() {
     <LegalPage
       title="Privacy Policy"
       subtitle="How The Blueprint Project handles data: minimal, transparent, never sold."
-      lastUpdated="August 2026"
+      lastUpdated="September 2026"
     >
       <LegalCallout>
         <p>
-          <strong>The short version:</strong> We don&apos;t collect personal information. We don&apos;t require accounts. We don&apos;t track you across the web. We don&apos;t sell data — we don&apos;t have any to sell. We use cookies in the strict technical sense (browser localStorage) to remember your saved programs and preferences. That&apos;s it.
+          <strong>The short version:</strong> We don&apos;t collect personal information. We don&apos;t require accounts. We don&apos;t track you across the web. We don&apos;t sell data — we don&apos;t have any to sell. We do use browser localStorage plus a small anonymous database to remember your saved programs and preferences. Nothing is ever tied to your name, email, or device identity. That&apos;s it.
         </p>
       </LegalCallout>
 
@@ -31,15 +31,15 @@ export default function PrivacyPage() {
         </ul>
         <p>What we do collect:</p>
         <ul className="list-disc space-y-1 pl-6">
-          <li><strong>Saved programs</strong> — in your browser&apos;s localStorage. Never leaves your device.</li>
-          <li><strong>Application status</strong> (saved / applied / accepted) — localStorage. Never leaves your device.</li>
-          <li><strong>Custom dates</strong> (exams, interviews) — localStorage. Never leaves your device.</li>
-          <li><strong>Program reviews you write</strong> (rating, text, optional name/grade) — localStorage.</li>
-          <li><strong>Program flags you submit</strong> — via email, to contact@blueprintproject.app.</li>
+          <li><strong>Saved programs</strong> — stored under an anonymous random ID (no account, email, or name). A copy lives in your browser&apos;s localStorage so your list loads instantly.</li>
+          <li><strong>Application status</strong> (saved / applied / accepted) — your browser&apos;s localStorage. Never leaves your device.</li>
+          <li><strong>Custom dates</strong> (exams, interviews) — your browser&apos;s localStorage. Never leaves your device.</li>
+          <li><strong>Program reviews you write</strong> (rating, text, optional name/grade) — sent to our server so we can review them before publishing. Approved reviews appear publicly with only the name you chose.</li>
+          <li><strong>Program flags you submit</strong> — via our flag form, into a private queue we use to fix listings. No account needed.</li>
           <li><strong>Server logs</strong> (IP, user agent, timestamp) — retained for 30 days, then deleted.</li>
         </ul>
         <p>
-          When we talk about &quot;Personal Information&quot; in this Privacy Policy, we are talking about anything that could identify you. The only thing that can identify you is your IP address (in our server logs for 30 days) and your name/grade if you choose to include it in a public review.
+          When we talk about &quot;Personal Information&quot; in this Privacy Policy, we are talking about anything that could identify you. The only things that could identify you are your IP address (in our server logs for 30 days) and the name/grade you choose to include in a review we approve for public display. Reviews are tied to a random anonymous ID, never to your identity.
         </p>
 
         <p className="mt-4 font-semibold">Third-party services that may collect data when you visit our site</p>
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
         <ul className="list-disc space-y-1 pl-6">
           <li>We do not set cookies</li>
           <li>We do not use third-party tracking pixels</li>
-          <li>We do use browser localStorage to remember your saved programs, custom dates, and reviews — this data never leaves your device</li>
+          <li>We do use browser localStorage as a fast local copy of your saved programs, application status, and custom dates. Saved programs also sync to our database under an anonymous random ID so they survive browser resets. Reviews and reports are stored on our server because they are shared or moderated content — never tied to your name or email</li>
           <li>You can clear localStorage at any time in your browser settings</li>
           <li>The map (powered by Mapbox) does not set tracking cookies on our site</li>
         </ul>
@@ -165,8 +165,12 @@ export default function PrivacyPage() {
               <td className="py-2">Until you clear your browser data or use &quot;Reset&quot; on the dashboard</td>
             </tr>
             <tr>
-              <td className="py-2 pr-4">Program flags (when you email us)</td>
-              <td className="py-2">Until resolved; archived after</td>
+              <td className="py-2 pr-4">Anonymous saves, reviews, and reports</td>
+              <td className="py-2">Until you ask us to delete them (email us). Keyed by a random ID, not your identity</td>
+            </tr>
+            <tr>
+              <td className="py-2 pr-4">Program flags and emailed reports</td>
+              <td className="py-2">Until resolved; retained to track fixes</td>
             </tr>
           </tbody>
         </table>
@@ -200,7 +204,7 @@ export default function PrivacyPage() {
         <p>We take reasonable measures to protect your information:</p>
         <ul className="list-disc space-y-1 pl-6">
           <li><strong>HTTPS everywhere.</strong> All traffic is encrypted in transit.</li>
-          <li><strong>No server-side user data.</strong> The only personal data on our servers is in server logs and email inbox, both with access controls.</li>
+          <li><strong>Minimal server-side data.</strong> Our database stores only anonymous saves, reviews, and reports keyed by random IDs — no names, emails, or account info. Server logs are access-controlled and deleted after 30 days.</li>
           <li><strong>Regular security reviews.</strong> The codebase is open to public review.</li>
           <li><strong>Vercel and Mapbox</strong> are SOC 2 compliant providers.</li>
         </ul>

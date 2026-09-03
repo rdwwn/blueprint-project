@@ -10,6 +10,7 @@ import {
   Check,
   Clock,
   FileCheck2,
+  Flag,
   MapPin,
   Tag,
   Wallet,
@@ -53,15 +54,6 @@ export default async function OpportunityPage({ params }: Props) {
   ).slice(0, 6);
   const field = opp.field || opp.cat_norm || "";
   const summary = buildSummary(opp);
-
-  const costLabel = opp.cost_detail || opp.cost || "";
-  const costVariant = costLabel.toLowerCase().includes("free")
-    ? "free"
-    : costLabel.toLowerCase().includes("stipend")
-      ? "stipend"
-      : costLabel.toLowerCase().includes("paid")
-        ? "paid"
-        : "";
 
   return (
     <>
@@ -190,6 +182,13 @@ export default async function OpportunityPage({ params }: Props) {
                   <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                   <span>Applications happen on the program&apos;s official website. Details are verified, but double-check the official page before you apply.</span>
                 </p>
+                <Link
+                  href={`/contribute/flag?program=${encodeURIComponent(slug)}&name=${encodeURIComponent(opp.name)}`}
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground underline-offset-4 transition hover:text-primary hover:underline"
+                >
+                  <Flag className="h-3.5 w-3.5" />
+                  Spot a mistake? Flag this listing
+                </Link>
               </section>
 
               <section className="mt-10 rounded-2xl border border-border bg-card p-6">
@@ -216,7 +215,7 @@ export default async function OpportunityPage({ params }: Props) {
               </section>
 
               <SimilarCarousel programs={similar} />
-              <OpportunityReviews programName={opp.name} />
+              <OpportunityReviews programName={opp.name} slug={slug} />
             </div>
 
             <div className="hidden self-start lg:block">

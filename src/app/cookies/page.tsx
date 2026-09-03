@@ -11,11 +11,11 @@ export default function CookiesPage() {
     <LegalPage
       title="Cookies Policy"
       subtitle="Short, plain-English explanation of how we use cookies and similar browser technologies."
-      lastUpdated="August 2026"
+      lastUpdated="September 2026"
     >
       <LegalCallout>
         <p>
-          <strong>The short version:</strong> We do not use cookies. We use browser localStorage to remember your saved programs and preferences. localStorage is similar to cookies but it stays on your device — we never see it.
+          <strong>The short version:</strong> We do not use cookies. We use browser localStorage plus a small anonymous database to remember your saved programs and preferences. Nothing is tied to your name or email, and we never sell anything.
         </p>
       </LegalCallout>
 
@@ -71,7 +71,7 @@ export default function CookiesPage() {
             </tr>
           </tbody>
         </table>
-        <p>For our use case (saving your saved programs, custom dates, and reviews), localStorage is <strong>strictly better for privacy</strong> than cookies. It never leaves your device.</p>
+        <p>We keep a local copy of your saved programs and settings in localStorage so pages load instantly. Your saved list also syncs to our server under an <strong>anonymous random ID</strong> (no name, email, or account) so it survives browser resets. Reviews and reports you submit are stored on our server because they are shared or moderated content — still under the same anonymous ID, never your identity.</p>
       </LegalSection>
 
       <LegalSection title="3. What we store in localStorage">
@@ -86,7 +86,7 @@ export default function CookiesPage() {
           <tbody>
             <tr className="border-b border-border/60">
               <td className="py-2 pr-4"><code>blueprint.saved</code></td>
-              <td className="py-2 pr-4">Program slugs you&apos;ve bookmarked</td>
+              <td className="py-2 pr-4">Program slugs you&apos;ve bookmarked (also synced to our server under your anonymous ID)</td>
               <td className="py-2">Dashboard → Clear all</td>
             </tr>
             <tr className="border-b border-border/60">
@@ -100,9 +100,9 @@ export default function CookiesPage() {
               <td className="py-2">Click the X next to each</td>
             </tr>
             <tr className="border-b border-border/60">
-              <td className="py-2 pr-4"><code>bp_program_reviews</code></td>
-              <td className="py-2 pr-4">Reviews you&apos;ve written</td>
-              <td className="py-2">Reviews page → Delete</td>
+              <td className="py-2 pr-4"><code>blueprint.anon_id</code></td>
+              <td className="py-2 pr-4">An anonymous random ID (no name or email) used to sync your saved programs, reviews, and reports with our server</td>
+              <td className="py-2">Clear browser data</td>
             </tr>
             <tr className="border-b border-border/60">
               <td className="py-2 pr-4"><code>bp_college_compare</code></td>

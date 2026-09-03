@@ -13,9 +13,9 @@ const EXPLORE = [
 
 const RESOURCES = [
   { label: "Opportunity database", href: "/search" },
+  { label: "Reviews", href: "/reviews" },
   { label: "Blog", href: "/blog" },
   { label: "Resources", href: "/resources" },
-  { label: "Success stories", href: "/stories" },
 ];
 
 type SocialLink = {
