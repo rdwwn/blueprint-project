@@ -17,71 +17,117 @@ import { cn } from "@/lib/utils";
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
 const US_CENTER: [number, number] = [-98.5, 39.8];
+const MAX_POPUP_ROWS = 6;
 
 function escapeHtml(s: string): string {
-  return s.replace(/[&<>&quot;&apos;]/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string),
-  );
+  return s.replace(/[&<>"']/g, (c) => {
+    switch (c) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      default:
+        return "&#39;";
+    }
+  });
 }
 
-function buildPopupHTML(program: Opportunity): string {
-  const slug = slugify(program.name);
-  const faviconUrl = program.host
-    ? `https://www.google.com/s2/favicons?domain=${program.host}&sz=64`
-    : "";
-  const cat = program.category ? `<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:#0f766e18;color:#0f766e;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">${escapeHtml(program.category)}</span>` : "";
-  return `
-    <div style="min-width:240px;font-family:system-ui,-apple-system,sans-serif;padding:4px 2px">
-      <div style="display:flex;align-items:flex-start;gap:10px">
-        ${faviconUrl ? `<img src="${faviconUrl}" alt="" style="width:32px;height:32px;border-radius:8px;flex-shrink:0;border:1px solid #e3ddcf;padding:2px;background:white"/>` : ""}
-        <div style="min-width:0;flex:1">
-          ${cat}
-          <p style="font-size:14px;font-weight:600;margin:0 0 4px;color:#1b2a4a;line-height:1.3">${escapeHtml(program.name)}</p>
-          ${program.org ? `<p style="font-size:11px;color:#5d6b80;margin:0 0 8px">${escapeHtml(program.org)}</p>` : ""}
-          <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:#5d6b80">
-            ${program.deadline ? `<span style="display:inline-flex;align-items:center;gap:3px">⏱ ${escapeHtml(program.deadline)}</span>` : ""}
-            ${program.location ? `<span style="display:inline-flex;align-items:center;gap:3px">📍 ${escapeHtml(program.location)}</span>` : ""}
-          </div>
-          <a href="/opportunity/${slug}" style="display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-size:12px;font-weight:600;color:#1e58d6;text-decoration:none">View program →</a>
-        </div>
-      </div>
-    </div>
-  `;
+function faviconFor(host: string | null): string {
+  return host ? `https://www.google.com/s2/favicons?domain=${host}&sz=64` : "";
 }
 
-function createTeardropMarker(program: Opportunity): HTMLDivElement {
+// One badge per unique location: EC-database style. Dozens of programs often
+// share a spot (state centroids, "Nationwide"), so the count chip does the work.
+type LocationGroup = {
+  key: string;
+  lng: number;
+  lat: number;
+  label: string;
+  programs: Opportunity[];
+};
+
+function buildGroups(programs: Opportunity[]): LocationGroup[] {
+  const bySpot = new Map<string, LocationGroup>();
+  for (const p of programs) {
+    if (isOnlineLocation(p.location)) continue;
+    const pos = geocodeLocation(p.location);
+    if (!pos) continue;
+    const key = `${pos.lat.toFixed(4)},${pos.lng.toFixed(4)}`;
+    let g = bySpot.get(key);
+    if (!g) {
+      g = { key, lng: pos.lng, lat: pos.lat, label: p.location ?? "", programs: [] };
+      bySpot.set(key, g);
+    }
+    g.programs.push(p);
+  }
+  const groups = [...bySpot.values()];
+  for (const g of groups) g.programs.sort((a, b) => a.name.localeCompare(b.name));
+  return groups;
+}
+
+function createBadgeEl(group: LocationGroup): HTMLDivElement {
+  const rep = group.programs.find((p) => p.host) ?? group.programs[0];
+  const fav = faviconFor(rep.host);
+  const n = group.programs.length;
+  const initial = escapeHtml((rep.org ?? rep.name).charAt(0).toUpperCase());
+
   const el = document.createElement("div");
-  el.className = "blueprint-teardrop";
-  el.title = program.name;
-
-  const faviconUrl = program.host
-    ? `https://www.google.com/s2/favicons?domain=${program.host}&sz=64`
-    : "";
-  const slug = slugify(program.name).slice(0, 8);
-  const fill = program.category === "Competition" ? "#0f766e" : "#1e58d6";
-
-  // Build using foreignObject so we can use HTML/CSS to render the logo with a circular crop.
-  // This is more reliable than SVG <image> with clip-path.
+  el.className = "bp-map-badge";
+  el.title = `${group.label} · ${n} program${n === 1 ? "" : "s"}`;
   el.innerHTML = `
-    <svg viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg" width="32" height="40">
-      <defs>
-        <filter id="shadow-${slug}" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-opacity="0.3"/>
-        </filter>
-        <clipPath id="circle-${slug}">
-          <circle cx="16" cy="13" r="8"/>
-        </clipPath>
-      </defs>
-      <path d="M16 38 C 16 38 4 22 4 13 A 12 12 0 0 1 28 13 C 28 22 16 38 16 38 Z" fill="${fill}" filter="url(#shadow-${slug})" stroke="white" stroke-width="1.5"/>
-      <circle cx="16" cy="13" r="9" fill="white"/>
+    <div style="position:relative;width:38px;height:38px">
+      <div style="width:38px;height:38px;border-radius:50%;background:#fff;border:2px solid #1e58d6;box-shadow:0 2px 10px rgba(15,23,42,.28);display:flex;align-items:center;justify-content:center;overflow:hidden">
+        ${
+          fav
+            ? `<img src="${fav}" width="22" height="22" style="border-radius:5px" alt=""/>`
+            : `<span style="font:700 14px system-ui,sans-serif;color:#1e58d6">${initial}</span>`
+        }
+      </div>
       ${
-        faviconUrl
-          ? `<image href="${faviconUrl}" x="8" y="5" width="16" height="16" preserveAspectRatio="xMidYMid meet" clip-path="url(#circle-${slug})"/>`
-          : `<text x="16" y="17" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="${fill}">${escapeHtml(program.org ?? "BP").charAt(0).toUpperCase()}</text>`
+        n > 1
+          ? `<div style="position:absolute;top:-7px;right:-9px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#1e58d6;color:#fff;font:700 11px/20px system-ui,sans-serif;text-align:center;box-shadow:0 2px 6px rgba(15,23,42,.3)">${n > 99 ? "99+" : n}</div>`
+          : ""
       }
-    </svg>
-  `;
+    </div>`;
   return el;
+}
+
+function buildPopupHTML(group: LocationGroup): string {
+  const rows = group.programs.slice(0, MAX_POPUP_ROWS);
+  const rest = group.programs.length - rows.length;
+  const rowHtml = rows
+    .map((p) => {
+      const fav = faviconFor(p.host);
+      const href = `/opportunity/${encodeURIComponent(slugify(p.name))}`;
+      return `
+        <a href="${href}" style="display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:1px solid #eef0f4;text-decoration:none">
+          ${
+            fav
+              ? `<img src="${fav}" alt="" style="width:24px;height:24px;border-radius:6px;flex-shrink:0;border:1px solid #e3ddcf;padding:1px;background:#fff"/>`
+              : `<span style="width:24px;height:24px;border-radius:6px;flex-shrink:0;background:#eaf0fd;display:flex;align-items:center;justify-content:center;font:700 11px system-ui,sans-serif;color:#1e58d6">${escapeHtml((p.org ?? p.name).charAt(0).toUpperCase())}</span>`
+          }
+          <span style="min-width:0;flex:1">
+            <span style="display:block;font-size:12.5px;font-weight:600;color:#1b2a4a;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.name)}</span>
+            ${p.deadline ? `<span style="display:block;font-size:10.5px;color:#5d6b80;margin-top:1px">⏱ ${escapeHtml(p.deadline)}</span>` : ""}
+          </span>
+        </a>`;
+    })
+    .join("");
+
+  return `
+    <div style="min-width:250px;max-width:300px;font-family:system-ui,-apple-system,sans-serif;padding:2px">
+      <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#5d6b80">${escapeHtml(group.label)} · ${group.programs.length} program${group.programs.length === 1 ? "" : "s"}</p>
+      <div style="max-height:280px;overflow-y:auto;margin:0 -4px;padding:0 4px">${rowHtml}</div>
+      ${
+        rest > 0
+          ? `<p style="margin:8px 0 0;font-size:11px;color:#5d6b80">+${rest} more at <a href="/opportunities" style="color:#1e58d6;font-weight:600;text-decoration:none">blueprintproject.app</a></p>`
+          : ""
+      }
+    </div>`;
 }
 
 export type MapBounds = { north: number; south: number; east: number; west: number };
@@ -97,130 +143,145 @@ interface USMapProps {
 export function USMap({ className, programs = OPPORTUNITIES, onBoundsChange }: USMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+  const popupRef = useRef<mapboxgl.Popup | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
+  const groupsRef = useRef<LocationGroup[]>([]);
   const [visibleCount, setVisibleCount] = useState(0);
   const [userLocated, setUserLocated] = useState(false);
 
-  const geoPrograms = useMemo(
-    () =>
-      programs
-        .filter((p) => !isOnlineLocation(p.location))
-        .map((program) => {
-          const pos = geocodeLocation(program.location);
-          return pos ? { program, position: pos } : null;
-        })
-        .filter((x): x is { program: Opportunity; position: { lat: number; lng: number } } => x !== null),
-    [programs],
+  const groups = useMemo(() => buildGroups(programs), [programs]);
+  const totalCount = useMemo(
+    () => groups.reduce((sum, g) => sum + g.programs.length, 0),
+    [groups],
   );
 
-  const updateMarkers = useCallback(() => {
+  const updateVisibleCount = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
-    markersRef.current.forEach((m) => m.remove());
-    markersRef.current = [];
+    const b = map.getBounds();
+    if (!b) return;
+    let n = 0;
+    for (const g of groupsRef.current) {
+      if (g.lng >= b.getWest() && g.lng <= b.getEast() && g.lat >= b.getSouth() && g.lat <= b.getNorth()) {
+        n += g.programs.length;
+      }
+    }
+    setVisibleCount(n);
+  }, []);
 
-    const bounds = map.getBounds();
-    if (!bounds) return;
-
-    const visible = geoPrograms.filter(({ position }) => bounds.contains([position.lng, position.lat]));
-    setVisibleCount(visible.length);
-
-    const PROGRAMS_TO_RENDER = 400;
-    const step = visible.length > PROGRAMS_TO_RENDER ? Math.ceil(visible.length / PROGRAMS_TO_RENDER) : 1;
-    const toRender = step > 1 ? visible.filter((_, i) => i % step === 0) : visible;
-
-    for (const { program, position } of toRender) {
-      const el = createTeardropMarker(program);
-      const popup = new mapboxgl.Popup({
-        offset: 18,
-        maxWidth: "300px",
+  const openPopup = useCallback((group: LocationGroup) => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!popupRef.current) {
+      popupRef.current = new mapboxgl.Popup({
+        offset: 16,
+        maxWidth: "320px",
         closeButton: false,
         className: "blueprint-popup",
-      }).setHTML(buildPopupHTML(program));
-
-      const marker = new mapboxgl.Marker({ element: el, anchor: "bottom" })
-        .setLngLat([position.lng, position.lat])
-        .setPopup(popup)
-        .addTo(map);
-
-      markersRef.current.push(marker);
+      });
     }
-  }, [geoPrograms]);
+    popupRef.current.setHTML(buildPopupHTML(group)).setLngLat([group.lng, group.lat]).addTo(map);
+  }, []);
+
+  // Create markers ONCE per filter change. During panning Mapbox just moves
+  // the existing DOM nodes — that's what keeps it smooth.
+  const rebuildMarkers = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    for (const m of markersRef.current) m.remove();
+    markersRef.current = [];
+    groupsRef.current.forEach((g) => {
+      const marker = new mapboxgl.Marker({ element: createBadgeEl(g), anchor: "center" })
+        .setLngLat([g.lng, g.lat])
+        .addTo(map);
+      marker.getElement().addEventListener("click", (e) => {
+        e.stopPropagation();
+        openPopup(g);
+      });
+      markersRef.current.push(marker);
+    });
+  }, [openPopup]);
+
+  const emitBounds = useCallback(() => {
+    const b = mapRef.current?.getBounds();
+    if (!b) return;
+    onBoundsChange?.({
+      north: b.getNorth(),
+      south: b.getSouth(),
+      east: b.getEast(),
+      west: b.getWest(),
+    });
+  }, [onBoundsChange]);
+
+  useEffect(() => {
+    groupsRef.current = groups;
+  }, [groups]);
 
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
+
+    // Small hover style for badges, injected once.
+    if (!document.getElementById("bp-map-badge-style")) {
+      const style = document.createElement("style");
+      style.id = "bp-map-badge-style";
+      style.textContent =
+        ".bp-map-badge{cursor:pointer;transition:transform .15s cubic-bezier(0.21,0.47,0.32,0.98)}.bp-map-badge:hover{transform:scale(1.12)}";
+      document.head.appendChild(style);
+    }
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/light-v11",
       center: US_CENTER,
       zoom: 3.5,
-      minZoom: 2,
+      minZoom: 1,
       maxZoom: 14,
-      maxBounds: [
-        [-170, 18],
-        [-55, 60],
-      ],
+      // No maxBounds: the whole world can be panned. Data is US-centric today,
+      // but nothing breaks when international programs land in the dataset.
       attributionControl: true,
     });
+    mapRef.current = map;
 
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: true, visualizePitch: false }), "bottom-right");
+    map.addControl(
+      new mapboxgl.NavigationControl({ showCompass: true, visualizePitch: false }),
+      "bottom-right",
+    );
     map.addControl(new mapboxgl.ScaleControl({ unit: "imperial" }), "bottom-left");
 
-    const throttledUpdate = () => {
-      requestAnimationFrame(() => updateMarkers());
-    };
-
-    const emitBounds = () => {
-      const b = map.getBounds();
-      if (!b) return;
-      onBoundsChange?.({
-        north: b.getNorth(),
-        south: b.getSouth(),
-        east: b.getEast(),
-        west: b.getWest(),
-      });
-    };
-
     map.on("load", () => {
-      setTotalCount(geoPrograms.length);
-      updateMarkers();
+      rebuildMarkers();
+      updateVisibleCount();
       emitBounds();
     });
 
+    // Panning/zooming never touches the markers — just the count pill.
     map.on("moveend", () => {
-      throttledUpdate();
+      updateVisibleCount();
       emitBounds();
     });
     map.on("zoomend", () => {
-      throttledUpdate();
+      updateVisibleCount();
       emitBounds();
     });
 
-    mapRef.current = map;
+    map.on("click", () => popupRef.current?.remove());
 
     return () => {
       onBoundsChange?.(null);
+      popupRef.current?.remove();
+      popupRef.current = null;
+      for (const m of markersRef.current) m.remove();
+      markersRef.current = [];
       map.remove();
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Filters changed upstream: swap the badge set in one pass.
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    if (map.isStyleLoaded()) {
-      updateMarkers();
-      setTotalCount(geoPrograms.length);
-    } else {
-      map.once("load", () => {
-        updateMarkers();
-        setTotalCount(geoPrograms.length);
-      });
-    }
-  }, [geoPrograms, updateMarkers]);
+    if (mapRef.current?.isStyleLoaded()) rebuildMarkers();
+  }, [groups, rebuildMarkers]);
 
   const focusUS = useCallback(() => {
     const map = mapRef.current;
