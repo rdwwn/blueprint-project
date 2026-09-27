@@ -238,7 +238,7 @@ body {
 .wave-band svg {
   display: block;
   width: 100%;
-  height: 56px;
+  height: 60px;
 }
 @media (min-width: 768px) {
   .wave-band svg {

@@ -28,12 +28,12 @@ export function Wave({
         className,
       )}
     >
-      <svg viewBox="0 0 1440 96" preserveAspectRatio="none">
-        {/* Three smooth full waves across the width (alternating rounded
-            crests and troughs) so the divider reads as a real wave rather
-            than one gentle hill. */}
+      <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+        {/* One big asymmetric crest, peak left of center, with a subtle
+            second rise near the right edge so it reads as drawn rather
+            than generated. */}
         <path
-          d="M0,54 C80,54 160,86 240,86 C320,86 400,54 480,54 C560,54 640,86 720,86 C800,86 880,54 960,54 C1040,54 1120,86 1200,86 C1280,86 1360,54 1440,54 L1440,96 L0,96 Z"
+          d="M0,108 C280,108 460,12 780,12 C1010,12 1090,64 1210,64 C1300,64 1370,42 1440,44 L1440,120 L0,120 Z"
           fill={fill}
         />
       </svg>

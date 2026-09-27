@@ -169,12 +169,12 @@ export default function MissionPage() {
                 Our community
               </h2>
               <p className="mt-3 text-muted-foreground">
-                Built by a student for students, and growing. Researchers,
-                advisors, and builders are joining soon.
+                The idea came up while the three of us were sitting together
+                complaining about program hunting. We each run a part of it.
               </p>
             </Reveal>
 
-          <div className="mx-auto grid max-w-3xl gap-4 sm:grid-cols-2">
+          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-3">
             <Reveal>
               <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
                 <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-primary">
@@ -182,12 +182,13 @@ export default function MissionPage() {
                 </span>
                 <h3 className="text-lg font-semibold">Ridwan Ahmed</h3>
                 <p className="text-xs text-muted-foreground">
-                  Student researcher &amp; builder
+                  12th grade · New York City
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  Started Blueprint after getting tired of digging through
-                  scattered program lists. Researches and hand-verifies the
-                  opportunities, and built this site himself.
+                  Got tired of digging through a bunch of tabs just to find one
+                  program, so he started building Blueprint. Then he brought in
+                  two friends. Checks the links, keeps the listings honest, and
+                  writes the code.
                 </p>
               </div>
             </Reveal>
@@ -199,12 +200,30 @@ export default function MissionPage() {
                 </span>
                 <h3 className="text-lg font-semibold">Ethan Troche</h3>
                 <p className="text-xs text-muted-foreground">
-                  Co-founder &amp; co-builder
+                  12th grade · New York City
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  Helps steer Blueprint with Ridwan: shaping what gets built,
-                  double-checking listings, and getting the word out to
-                  students who need it.
+                  Thought of the idea alongside Ridwan and helped get it
+                  running. Handles the pipeline: partners, corrections, and the
+                  accuracy checks on every listing.
+                </p>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.16}>
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
+                <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-accent/10 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-accent">
+                  Co-Founder
+                </span>
+                <h3 className="text-lg font-semibold">Shadman Rahman</h3>
+                <p className="text-xs text-muted-foreground">
+                  12th grade · New York City
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  Also thought of the idea, back when all three of us kept
+                  coming up empty searching for programs. Runs social media
+                  and outreach: makes the posts, connects with counselors and
+                  orgs, and grows the page.
                 </p>
               </div>
             </Reveal>
