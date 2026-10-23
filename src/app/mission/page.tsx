@@ -174,7 +174,7 @@ export default function MissionPage() {
               </p>
             </Reveal>
 
-          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-3">
+          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Reveal>
               <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
                 <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-primary">
@@ -182,7 +182,7 @@ export default function MissionPage() {
                 </span>
                 <h3 className="text-lg font-semibold">Ridwan Ahmed</h3>
                 <p className="text-xs text-muted-foreground">
-                  12th grade · New York City
+                  12th grade · New York, NY
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                   Got tired of digging through a bunch of tabs just to find one
@@ -200,7 +200,7 @@ export default function MissionPage() {
                 </span>
                 <h3 className="text-lg font-semibold">Ethan Troche</h3>
                 <p className="text-xs text-muted-foreground">
-                  12th grade · New York City
+                  12th grade · New York, NY
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                   Thought of the idea alongside Ridwan and helped get it
@@ -217,7 +217,7 @@ export default function MissionPage() {
                 </span>
                 <h3 className="text-lg font-semibold">Shadman Rahman</h3>
                 <p className="text-xs text-muted-foreground">
-                  12th grade · New York City
+                  12th grade · New York, NY
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                   Also thought of the idea, back when all three of us kept
@@ -227,6 +227,56 @@ export default function MissionPage() {
                 </p>
               </div>
             </Reveal>
+
+            <Reveal delay={0.24}>
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
+                <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-accent/10 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-accent">
+                  Partnerships Lead · Design Lead
+                </span>
+                <h3 className="text-lg font-semibold">Brandon Villa</h3>
+                <p className="text-xs text-muted-foreground">
+                  12th grade · New York, NY
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  Works with Ethan on partner outreach and owns the visual
+                  identity: social graphics, one-pagers, and brand assets.
+                </p>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.32}>
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
+                <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-muted px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  School Ambassador Director
+                </span>
+                <h3 className="text-lg font-semibold">Robert O&apos;Sullivan</h3>
+                <p className="text-xs text-muted-foreground">
+                  12th grade · New York, NY
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  Leads the school ambassador program and keeps the
+                  coordinators working together.
+                </p>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.4}>
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
+                <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-muted px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Ambassador Recruitment
+                </span>
+                <h3 className="text-lg font-semibold">Almuhimin Chowdhury</h3>
+                <p className="text-xs text-muted-foreground">
+                  12th grade · Buffalo, NY
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  Founded a Blueprint chapter at Cheektowaga Central High
+                  School in Buffalo and recruits and onboards new student
+                  ambassadors.
+                </p>
+              </div>
+            </Reveal>
+
           </div>
 
           <Reveal delay={0.15}>
