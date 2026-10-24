@@ -11,6 +11,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Flag,
+  HandHeart,
+  Mail,
   Clock3,
   CheckCircle2,
   MessageSquare,
@@ -54,6 +56,26 @@ type ReportsData = {
   counts: { open: number; resolved: number };
 };
 
+type AdminContribution = {
+  id: string;
+  anonId: string | null;
+  name: string;
+  email: string;
+  grade: string | null;
+  helpWith: string;
+  message: string;
+  link: string | null;
+  status: string;
+  createdAt: string;
+  handledAt: string | null;
+};
+
+type ContributionsData = {
+  fresh: AdminContribution[];
+  handled: AdminContribution[];
+  counts: { new: number; handled: number };
+};
+
 const STORAGE_KEY = "bp.admin_key";
 const issueTypeLabel = (t: string) =>
   ({ "dead-link": "Dead link", "wrong-deadline": "Wrong deadline", cancelled: "Program cancelled", "wrong-eligibility": "Wrong eligibility", other: "Something else" })[t] ?? t;
@@ -63,9 +85,10 @@ export default function AdminPage() {
   const [input, setInput] = useState("");
   const [authError, setAuthError] = useState("");
   const [checking, setChecking] = useState(false);
-  const [tab, setTab] = useState<"reviews" | "reports">("reviews");
+  const [tab, setTab] = useState<"reviews" | "reports" | "contributions">("reviews");
   const [reviews, setReviews] = useState<ReviewsData | null>(null);
   const [reports, setReports] = useState<ReportsData | null>(null);
+  const [contributions, setContributions] = useState<ContributionsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [flash, setFlash] = useState("");
@@ -85,6 +108,7 @@ export default function AdminPage() {
     setKey(null);
     setReviews(null);
     setReports(null);
+    setContributions(null);
   }, []);
 
   const load = useCallback(
@@ -104,6 +128,19 @@ export default function AdminPage() {
         if (!rRes.ok || !pRes.ok) throw new Error("load failed");
         setReviews((await rRes.json()) as ReviewsData);
         setReports((await pRes.json()) as ReportsData);
+        // Contributions live in their own table; treat a failure here as an
+        // empty queue so reviews and reports still load.
+        const cRes = await fetch("/api/admin/contributions", { headers: headers(k) });
+        if (cRes.status === 401) {
+          unauth();
+          setAuthError("That passcode isn't right.");
+          return false;
+        }
+        setContributions(
+          cRes.ok
+            ? ((await cRes.json()) as ContributionsData)
+            : { fresh: [], handled: [], counts: { new: 0, handled: 0 } },
+        );
         return true;
       } catch {
         setAuthError("Could not reach the moderation service.");
@@ -184,6 +221,23 @@ export default function AdminPage() {
     }
   };
 
+  const patchContribution = async (id: string, action: "handle" | "reopen") => {
+    if (!key) return;
+    setBusyId(id);
+    const res = await fetch("/api/admin/contributions", {
+      method: "PATCH",
+      headers: headers(key),
+      body: JSON.stringify({ id, action }),
+    });
+    setBusyId(null);
+    if (res.status === 401) return unauth();
+    if (res.ok) {
+      setFlash(action === "handle" ? "Contribution marked handled." : "Contribution reopened.");
+      await load(key, true);
+      setTimeout(() => setFlash(""), 2500);
+    }
+  };
+
   if (!key) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-6">
@@ -227,6 +281,7 @@ export default function AdminPage() {
 
   const pendingCount = reviews?.counts.pending ?? 0;
   const openCount = reports?.counts.open ?? 0;
+  const newContributions = contributions?.counts.new ?? 0;
 
   return (
     <main className="min-h-screen bg-background">
@@ -238,7 +293,7 @@ export default function AdminPage() {
             </span>
             <div>
               <h1 className="text-base font-semibold leading-tight">Moderation</h1>
-              <p className="text-[11px] text-muted-foreground">Reviews + reports queue</p>
+              <p className="text-[11px] text-muted-foreground">Reviews, reports + contributions</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -269,6 +324,7 @@ export default function AdminPage() {
         <div className="flex gap-2">
           <TabButton active={tab === "reviews"} onClick={() => setTab("reviews")} icon={<MessageSquare className="h-4 w-4" />} label="Reviews" badge={pendingCount} />
           <TabButton active={tab === "reports"} onClick={() => setTab("reports")} icon={<Flag className="h-4 w-4" />} label="Reports" badge={openCount} />
+          <TabButton active={tab === "contributions"} onClick={() => setTab("contributions")} icon={<HandHeart className="h-4 w-4" />} label="Contributions" badge={newContributions} />
         </div>
 
         {tab === "reviews" ? (
@@ -308,7 +364,8 @@ export default function AdminPage() {
           ) : (
             <LoadingNote />
           )
-        ) : reports ? (
+        ) : tab === "reports" ? (
+          reports ? (
           <div className="mt-6 space-y-8">
             <QueueSection
               title={openCount ? `${openCount} open report${openCount === 1 ? "" : "s"}` : "No open reports"}
@@ -334,6 +391,41 @@ export default function AdminPage() {
                         {r.opportunityName && <span className="ml-1 font-medium">· {r.opportunityName}</span>}
                       </div>
                       <span className="shrink-0 text-xs text-muted-foreground">{shortDate(r.createdAt)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
+          ) : (
+            <LoadingNote />
+          )
+        ) : contributions ? (
+          <div className="mt-6 space-y-8">
+            <QueueSection
+              title={newContributions ? `${newContributions} new contribution${newContributions === 1 ? "" : "s"}` : "No new contributions"}
+              empty={newContributions === 0}
+              emptyText="Nobody has asked to help yet. The form lives at /contribute/join."
+            >
+              {contributions.fresh.map((c) => (
+                <ContributionCard key={c.id} c={c} busy={busyId === c.id} onAction={() => patchContribution(c.id, "handle")} />
+              ))}
+            </QueueSection>
+
+            {contributions.handled.length > 0 && (
+              <section>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recently handled</h2>
+                <ul className="mt-3 space-y-2">
+                  {contributions.handled.slice(0, 20).map((c) => (
+                    <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-card px-4 py-3 text-sm">
+                      <div className="min-w-0">
+                        <span className="mr-2 inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold uppercase text-success">
+                          <CheckCircle2 className="h-3 w-3" /> handled
+                        </span>
+                        <span className="font-medium">{c.name}</span>
+                        <span className="text-muted-foreground"> · {roleLabel(c.helpWith)}</span>
+                      </div>
+                      <span className="shrink-0 text-xs text-muted-foreground">{shortDate(c.createdAt)}</span>
                     </li>
                   ))}
                 </ul>
@@ -453,6 +545,53 @@ function ReportCard({ r, busy, onAction }: { r: AdminReport; busy: boolean; onAc
       </div>
       <p className="mt-3 rounded-xl border border-border/60 bg-background/50 px-4 py-3 text-sm leading-relaxed text-foreground/85">{r.details}</p>
     </article>
+  );
+}
+
+function ContributionCard({ c, busy, onAction }: { c: AdminContribution; busy: boolean; onAction: () => void }) {
+  const safeLink = c.link && /^https?:\/\//i.test(c.link) ? c.link : null;
+  return (
+    <article className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="font-semibold">{c.name}</h3>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+              <Mail className="h-3 w-3" /> {c.email}
+            </a>
+            {c.grade && <span className="rounded-full bg-muted px-2 py-0.5">{c.grade}</span>}
+            <span>· {shortDate(c.createdAt)}</span>
+          </div>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">
+          <HandHeart className="h-3 w-3" /> {roleLabel(c.helpWith)}
+        </span>
+      </div>
+      <p className="mt-3 whitespace-pre-line rounded-xl border border-border/60 bg-background/50 px-4 py-3 text-sm leading-relaxed text-foreground/85">{c.message}</p>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        {safeLink ? (
+          <a href={safeLink} target="_blank" rel="noopener noreferrer" className="max-w-full truncate text-xs text-primary hover:underline">
+            {safeLink}
+          </a>
+        ) : (
+          <span />
+        )}
+        <button
+          onClick={onAction}
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 rounded-full bg-success px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-success/90 disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+          Mark handled
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function roleLabel(t: string) {
+  return (
+    { coding: "Coding", design: "Design", outreach: "Outreach", ambassadors: "School ambassadors", research: "Program research", other: "Something else" }[t] ?? t
   );
 }
 

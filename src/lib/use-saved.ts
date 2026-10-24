@@ -12,7 +12,7 @@ import { getAnonId } from "@/lib/anon-id";
 const KEY = "blueprint.saved";
 
 let cache: string[] = [];
-let emit = () => {};
+const listeners = new Set<() => void>();
 let initialized = false;
 let hydrationStarted = false;
 
@@ -39,12 +39,16 @@ function getServerSnapshot(): string[] {
 }
 
 function subscribe(onChange: () => void) {
-  emit = onChange;
+  listeners.add(onChange);
   window.addEventListener("storage", onChange);
   return () => {
-    emit = () => {};
+    listeners.delete(onChange);
     window.removeEventListener("storage", onChange);
   };
+}
+
+function emit() {
+  listeners.forEach((fn) => fn());
 }
 
 function writeSaved(next: string[]) {

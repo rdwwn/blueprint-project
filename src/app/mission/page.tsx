@@ -174,13 +174,13 @@ export default function MissionPage() {
               </p>
             </Reveal>
 
-          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Reveal>
-              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
+          <div className="mx-auto grid max-w-5xl items-stretch gap-6 sm:grid-cols-3">
+            <Reveal className="sm:order-2">
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-8">
                 <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-primary">
                   Founder
                 </span>
-                <h3 className="text-lg font-semibold">Ridwan Ahmed</h3>
+                <h3 className="text-xl font-semibold">Ridwan Ahmed</h3>
                 <p className="text-xs text-muted-foreground">
                   12th grade · New York, NY
                 </p>
@@ -193,8 +193,8 @@ export default function MissionPage() {
               </div>
             </Reveal>
 
-            <Reveal delay={0.08}>
-              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
+            <Reveal delay={0.16} className="sm:order-3">
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-7">
                 <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-accent/10 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-accent">
                   Co-Founder
                 </span>
@@ -210,8 +210,8 @@ export default function MissionPage() {
               </div>
             </Reveal>
 
-            <Reveal delay={0.16}>
-              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
+            <Reveal delay={0.08} className="sm:order-1">
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-7">
                 <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-accent/10 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-accent">
                   Co-Founder
                 </span>
@@ -228,16 +228,19 @@ export default function MissionPage() {
               </div>
             </Reveal>
 
+          </div>
+
+          <div className="mx-auto mt-6 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <Reveal delay={0.24}>
-              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
-                <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-accent/10 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-accent">
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-4">
+                <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-md bg-accent/10 px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-accent">
                   Partnerships Lead · Design Lead
                 </span>
-                <h3 className="text-lg font-semibold">Brandon Villa</h3>
+                <h3 className="text-base font-semibold">Brandon Villa</h3>
                 <p className="text-xs text-muted-foreground">
                   12th grade · New York, NY
                 </p>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
                   Works with Ethan on partner outreach and owns the visual
                   identity: social graphics, one-pagers, and brand assets.
                 </p>
@@ -245,15 +248,15 @@ export default function MissionPage() {
             </Reveal>
 
             <Reveal delay={0.32}>
-              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
-                <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-muted px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-4">
+                <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-primary">
                   School Ambassador Director
                 </span>
-                <h3 className="text-lg font-semibold">Robert O&apos;Sullivan</h3>
+                <h3 className="text-base font-semibold">Robert O&apos;Sullivan</h3>
                 <p className="text-xs text-muted-foreground">
                   12th grade · New York, NY
                 </p>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
                   Leads the school ambassador program and keeps the
                   coordinators working together.
                 </p>
@@ -261,15 +264,15 @@ export default function MissionPage() {
             </Reveal>
 
             <Reveal delay={0.4}>
-              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
-                <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-md bg-muted px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-4">
+                <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-md bg-accent/10 px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-accent">
                   Ambassador Recruitment
                 </span>
-                <h3 className="text-lg font-semibold">Almuhimin Chowdhury</h3>
+                <h3 className="text-base font-semibold">Almuhimin Chowdhury</h3>
                 <p className="text-xs text-muted-foreground">
                   12th grade · Buffalo, NY
                 </p>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
                   Founded a Blueprint chapter at Cheektowaga Central High
                   School in Buffalo and recruits and onboards new student
                   ambassadors.
@@ -289,9 +292,12 @@ export default function MissionPage() {
                   here.
                 </p>
               </div>
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-muted px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                Get involved · coming soon
-              </span>
+              <Link
+                href="/contribute/join"
+                className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/95"
+              >
+                <HandHeart className="h-4 w-4" /> Get involved
+              </Link>
             </div>
           </Reveal>
         </section>

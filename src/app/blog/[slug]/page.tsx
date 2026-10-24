@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { POSTS, BlogPostContent } from "./post-content";
+import { POSTS } from "./post-data";
+import { BlogPostContent } from "./post-content";
 
 export async function generateStaticParams() {
   return Object.keys(POSTS).map((slug) => ({ slug }));
